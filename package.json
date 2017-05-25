@@ -1,6 +1,6 @@
 {
   "name": "koa-slim",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "slim koa framework",
   "main": "index.js",
   "scripts": {
