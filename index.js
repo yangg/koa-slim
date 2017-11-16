@@ -104,8 +104,8 @@ function initApp(app) {
   })
   app.getController = (name) => controllers[name]
   app.getModel = (name) => models[name]
-  app.models = models
-  app.controllers = controllers
+  app.model = models
+  app.controller = controllers
   initPlugins()
   initMiddleware()
   initRoutes()
