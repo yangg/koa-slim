@@ -82,24 +82,28 @@ function initApp(app) {
     }
   }
 
-  const models = new Proxy({}, get: function(target, name) {
-    if(name in target) {
-      return target[name]
+  const models = new Proxy({}, {
+    get: function(target, name) {
+      if(name in target) {
+        return target[name]
+      }
+      const modelPath = path.join(modelsDir, name + '.js')
+      return fs.existsSync(modelPath) ? require(modelPath)(app) : null
     }
-    const modelPath = path.join(modelsDir, name + '.js')
-    return fs.existsSync(modelPath) ? require(modelPath)(app) : null
   })
-  const controllers = new Proxy({}, get: function(target, name) {
-    if(name in target) {
-      return target[name]
-    }
-    const controllerPath = path.join(controllersDir, name + '.js')
-    const model = models(name)
+  const controllers = new Proxy({}, {
+    get: function(target, name) {
+      if(name in target) {
+        return target[name]
+      }
+      const controllerPath = path.join(controllersDir, name + '.js')
+      const model = models[name]
 
-    return fs.existsSync(controllerPath) ? require(controllerPath)(app, model) : null
-  }
-  app.getController = (name) => controllers['name']
-  app.getModel = (name) => models['name']
+      return fs.existsSync(controllerPath) ? require(controllerPath)(app, model) : null
+    }
+  })
+  app.getController = (name) => controllers[name]
+  app.getModel = (name) => models[name]
   app.models = models
   app.controllers = controllers
   initPlugins()
