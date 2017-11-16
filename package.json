@@ -4,7 +4,8 @@
   "description": "slim koa framework",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postversion": "git push && npm_config_registry=https://registry.npmjs.org/ npm publish"
   },
   "standard": {
     "globals": [

@@ -27,7 +27,7 @@ const extendConfig = (config, name) => {
   }
 }
 
-module.exports = (app) => {
+function initApp(app) {
   let config = {
     proxy: true,
     env: app.env,
@@ -68,39 +68,50 @@ module.exports = (app) => {
 
   const initRoutes = () => {
     const router = Router()
-    fs.readdirSync(routesDir)
-    .forEach(function (file) {
-      if (file.charAt(0) === '.' || file.slice(-3) !== '.js') {
-        return
-      }
-      const moduleName = path.basename(file, '.js')
-      const subRouter = Router({
-        prefix: `/${moduleName === 'home' ? '' : moduleName}`
-      })
-      const controller = app.getController(moduleName)
-
-      require(path.join(routesDir, file))(subRouter, controller, app)
-      router.use(subRouter.routes(), subRouter.allowedMethods())
-    })
+    require(routesDir)(router, app)
+    router.get('/__reload', reloadConfig)
     app.use(router.routes(), router.allowedMethods())
   }
 
-  const getModel = (name) => {
+  const reloadConfig = (ctx) => {
+    if(ctx.request.ip === '127.0.0.1') {
+      const fileName = app.env + '.js'
+      delete require.cache[path.join(configDir, fileName)]
+      extendConfig(app.config, fileName)
+      ctx.body = 'Reloaded!'
+    }
+  }
+
+  const models = new Proxy({}, get: function(target, name) {
+    if(name in target) {
+      return target[name]
+    }
     const modelPath = path.join(modelsDir, name + '.js')
     return fs.existsSync(modelPath) ? require(modelPath)(app) : null
-  }
-  const getController = (name) => {
+  })
+  const controllers = new Proxy({}, get: function(target, name) {
+    if(name in target) {
+      return target[name]
+    }
     const controllerPath = path.join(controllersDir, name + '.js')
-    const model = getModel(name)
+    const model = models(name)
 
     return fs.existsSync(controllerPath) ? require(controllerPath)(app, model) : null
   }
-  app.getController = getController
-  app.getModel = getModel
+  app.getController = (name) => controllers['name']
+  app.getModel = (name) => models['name']
+  app.models = models
+  app.controllers = controllers
   initPlugins()
   initMiddleware()
   initRoutes()
+}
 
+module.exports = (app) => {
+
+  initApp(app)
+
+  const config = app.config
   const server = app.listen(config.port || process.env.PORT || 3009, config.listenHost || 'localhost', function () {
     const addressInfo = server.address()
     logger.info('%s(%s) listen on http://%s:%s started', app.config.name, app.env, addressInfo.address, addressInfo.port)
