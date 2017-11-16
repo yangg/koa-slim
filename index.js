@@ -1,7 +1,7 @@
 
 const path = require('path')
 const fs = require('fs')
-const merge = require('lodash.merge')
+const {merge} = require('lodash')
 const Router = require('koa-router')
 
 const projectDir = path.dirname(require.main.filename)
