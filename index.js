@@ -27,7 +27,7 @@ const extendConfig = (config, name) => {
   }
 }
 
-function initApp(app) {
+function initApp (app) {
   let config = {
     proxy: true,
     env: app.env,
@@ -74,17 +74,18 @@ function initApp(app) {
   }
 
   const reloadConfig = (ctx) => {
-    if(ctx.request.ip === '127.0.0.1') {
-      const fileName = app.env + '.js'
-      delete require.cache[path.join(configDir, fileName)]
-      extendConfig(app.config, fileName)
-      ctx.body = 'Reloaded!'
+    if (ctx.request.ip === '127.0.0.1') {
+      const name = app.env
+      const filePath = fs.realpathSync(configDir + `/${name}.js`)
+      delete require.cache[filePath]
+      extendConfig(app.config, name)
+      ctx.body = 'Reloaded!\n'
     }
   }
 
   const models = new Proxy({}, {
-    get: function(target, name) {
-      if(name in target) {
+    get: function (target, name) {
+      if (name in target) {
         return target[name]
       }
       const modelPath = path.join(modelsDir, name + '.js')
@@ -92,8 +93,8 @@ function initApp(app) {
     }
   })
   const controllers = new Proxy({}, {
-    get: function(target, name) {
-      if(name in target) {
+    get: function (target, name) {
+      if (name in target) {
         return target[name]
       }
       const controllerPath = path.join(controllersDir, name + '.js')
@@ -112,7 +113,6 @@ function initApp(app) {
 }
 
 module.exports = (app) => {
-
   initApp(app)
 
   const config = app.config
