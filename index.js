@@ -89,7 +89,9 @@ function initApp (app) {
         return target[name]
       }
       const modelPath = path.join(modelsDir, name + '.js')
-      return fs.existsSync(modelPath) ? require(modelPath)(app) : null
+      const mod = fs.existsSync(modelPath) ? require(modelPath)(app) : null
+      target[name] = mod
+      return mod
     }
   })
   const controllers = new Proxy({}, {
@@ -100,7 +102,9 @@ function initApp (app) {
       const controllerPath = path.join(controllersDir, name + '.js')
       const model = models[name]
 
-      return fs.existsSync(controllerPath) ? require(controllerPath)(app, model) : null
+      const mod = fs.existsSync(controllerPath) ? require(controllerPath)(app, model) : null
+      target[name] = mod
+      return mod
     }
   })
   app.getController = (name) => controllers[name]
