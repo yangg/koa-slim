@@ -116,12 +116,14 @@ function initApp (app) {
   initRoutes()
 }
 
-module.exports = (app) => {
+module.exports = (app, readyCallback) => {
   initApp(app)
 
   const config = app.config
   const server = app.listen(config.port || process.env.PORT || 3009, config.listenHost || 'localhost', function () {
     const addressInfo = server.address()
     logger.info('%s(%s) listen on http://%s:%s started', app.config.name, app.env, addressInfo.address, addressInfo.port)
+    readyCallback && readyCallback()
   })
+  return server
 }
